@@ -31,14 +31,13 @@ users = pd.DataFrame(usuarios,columns=['user','password'])
 
 #==== Obtenemos los datos con los que trabajaremos ====
 
-sales           = pd.DataFrame(data=lifestore_sales,columns=lifestore_sales_headers)
+sales           = pd.DataFrame(data=lifestore_sales,columns=lifestore_sales_headers) # Datos de ventas
 sales['date']   = pd.to_datetime(sales['date']) # Transformamos la fecha de tipo object a datetime
 sales['date']   = sales.date.apply(lambda x: x.replace(year = 2020) if x.year == 2002 else x) # Cambiamos la fecha del 2002 a 2020
-sales.head()
 
-products = pd.DataFrame(data=lifestore_products,columns=lifestore_products_headers)
+products = pd.DataFrame(data=lifestore_products,columns=lifestore_products_headers) # Datos de productos
 
-searches = pd.DataFrame(data=lifestore_searches,columns=lifestore_searches_headers)
+searches = pd.DataFrame(data=lifestore_searches,columns=lifestore_searches_headers) # Datos de busquedas
 
 #======================================================
 
@@ -52,8 +51,10 @@ def top_sales(n):
     filtro = sales['refund'] != 1
     data = sales[filtro].copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left')
     if n <= sales_group.shape[0]:
+        # Obtenemos el total n de productos con mayores ventas
         top = sales_group.nlargest(n,columns='total').reset_index()
         print('#================= Top {} Productos con Mayores Ventas =================#'.format(n))
         pprint(top)
@@ -70,8 +71,10 @@ def small_sales(n):
     filtro = sales['refund'] != 1
     data = sales[filtro].copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left')
     if n <= sales_group.shape[0]:
+        # Obtenemos el total n de productos con menores ventas
         small = sales_group.nsmallest(n,columns='total').reset_index()
         print('#================= Top {} Productos con Menores Ventas =================#'.format(n))
         pprint(small)
@@ -87,8 +90,10 @@ def top_searches(n):
     # Se descartan aquellas ventas que fueron devoluciones
     data = searches.copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left')
     if n <= sales_group.shape[0]:
+        # Obtenemos el total n de productos con mayores busquedas
         top = sales_group.nlargest(n,columns='total').reset_index()
         print('#================= Top {} Productos con Mayores Busquedas =================#'.format(n))
         pprint(top)
@@ -104,8 +109,10 @@ def small_searches(n):
     # Se descartan aquellas ventas que fueron devoluciones
     data = searches.copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left')
     if n <= sales_group.shape[0]:
+        # Obtenemos el total n de productos con menores busquedas
         small = sales_group.nsmallest(n,columns='total').reset_index()
         print('#================= Top {} Productos con Menores Busquedas =================#'.format(n))
         pprint(small)
@@ -122,8 +129,10 @@ def top_sales_category(n):
     filtro = sales['refund'] != 1
     data = sales[filtro].copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left').groupby(by = 'category').agg(total=('total','sum'))
     if n <= sales_group.shape[0]:
+        # Obtenemos el total n de categorías con mayores ventas
         top = sales_group.nlargest(n,columns='total').reset_index()
         print('#================= Top {} Categorias con Mayores Ventas =================#'.format(n))
         pprint(top)
@@ -140,8 +149,10 @@ def small_sales_category(n):
     filtro = sales['refund'] != 1
     data = sales[filtro].copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left').groupby(by = 'category').agg(total=('total','sum'))
     if n <= sales_group.shape[0]:
+        # Obtenemos el total n de categorías con menores ventas
         small = sales_group.nsmallest(n,columns='total').reset_index()
         print('#================= Top {} Categorias con Menores Ventas =================#'.format(n))
         pprint(small)
@@ -157,6 +168,7 @@ def product_searches():
     # Se descartan aquellas ventas que fueron devoluciones
     data = searches.copy()
 
+    # Agrupamos por id_product para nuestro analisis
     sales_group = data.groupby(by = 'id_product').agg(total=('id_product','count')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left').groupby(by = 'category').agg(total=('total','sum'))
     
     data2 = sales_group.sort_values(by = 'total').reset_index()
@@ -169,15 +181,19 @@ def product_reviews(n):
     data = sales.copy()
     error = False
 
+    # Agrupamos por id_product para nuestro analisis
     reviews = data.groupby(by = ['id_product']).agg(total_score=('score','mean')).reset_index().merge(products[['id_product','name','category']],on='id_product',how='left')
 
+    # Acomodamos las columnas del dataframe a nuestra conveniencia
     cols_at_end = ['total_score']
     reviews = reviews[[c for c in reviews if c not in cols_at_end] + [c for c in cols_at_end if c in reviews]]
 
     if n <= reviews.shape[0]:
+        # Obtenemos la cantidad n del promedio de reviews de productos con mejores scores
         top = reviews.nlargest(n,columns=['total_score']).reset_index(drop=True)
         print('#================= Top {} Productos con Mayor Score =================#'.format(n))
         pprint(top)
+        # Obtenemos la cantidad n del promedio de reviews de categorias con mejores scores
         top = reviews.groupby(by = 'category').agg(total_score=('total_score','mean')).reset_index().nlargest(n,columns=['total_score']).reset_index(drop=True)
         print('#================= Top {} Categorias con Mayor Score =================#'.format(n))
         pprint(top)
@@ -187,9 +203,11 @@ def product_reviews(n):
         return error
 
     if n <= reviews.shape[0]:
+        # Obtenemos la cantidad n del promedio de reviews de productos con peores scores
         small = reviews.nsmallest(n,columns=['total_score']).reset_index(drop=True)
         print('#================= Top {} Productos con Menor Score =================#'.format(n))
         pprint(small)
+        # Obtenemos la cantidad n del promedio de reviews de categorias con peores scores
         small = reviews.groupby(by = 'category').agg(total_score=('total_score','mean')).reset_index().nsmallest(n,columns=['total_score']).reset_index(drop=True)
         print('#================= Top {} Categorias con Menor Score =================#'.format(n))
         pprint(small)
@@ -201,12 +219,16 @@ def product_reviews(n):
     return error
 
 def sales_income():
+    # Se descartan aquellas ventas que fueron devoluciones
     filtro = sales.refund != 1
     data = sales[filtro].copy()
     data = data.merge(products[['id_product','price']],on='id_product',how='left')
 
+    # Agrupamos por fecha para nuestro analisis
     total_sales = data.groupby(by=[pd.Grouper(key='date', freq='M')]).agg(sold=('id_product','count'),total_income=('price','sum')).reset_index()
+    # Obtenemos el mes
     total_sales['month'] = total_sales['date'].dt.strftime('%b')
+    # Acomodamos las columnas del dataframe a nuestra conveniencia
     cols_at_end = ['sold','total_income']
     total_sales = total_sales[[c for c in total_sales if c not in cols_at_end] + [c for c in cols_at_end if c in total_sales]]
 
@@ -215,6 +237,7 @@ def sales_income():
 
     print('\n')
 
+    # Obtenemos los datos anuales de ventas e ingresos
     for year in total_sales['date'].dt.year.unique():
         total_sales_year = total_sales[total_sales['date'].dt.year == year].sold.sum()
         total_income_year = total_sales[total_sales['date'].dt.year == year].total_income.sum()
@@ -265,8 +288,8 @@ if __name__ == "__main__":
     salir = False
 
     # Iniciamos sesion en el sistema
-    username = input('Ingrese el usuario: ')
-    password = input('Ingrese la contraseña: ')
+    username = input('Ingrese el usuario: ') # user: admin
+    password = input('Ingrese la contraseña: ') #password: 777
 
     sesion = iniciar_sesion(username,password)
 
@@ -284,7 +307,7 @@ if __name__ == "__main__":
             print('Ha ingresado una opcion no reconocida o invalida')
             time.sleep(3)
 
-        if caso == 1:
+        if caso == 1: # Productos mas vendidos y productos rezagados (Top n catalogo de productos con mayores/menores ventas y busquedas)
             try:
                 n = int(input('Ingrese el numero de ventas de productos a obtener: '))
                 m = int(input('Ingrese el numero de busquedas de productos a obtener: '))
@@ -300,7 +323,7 @@ if __name__ == "__main__":
 
             salir = exit_program()
 
-        elif caso == 2:
+        elif caso == 2: # Productos por reseña en el servicio (Top n productos con mejores/menores reseñas)
             try:
                 n = int(input('Ingrese el numero de reseñas a obtener: '))
             except:
@@ -309,14 +332,14 @@ if __name__ == "__main__":
 
             salir = exit_program()
 
-        elif caso == 3:
+        elif caso == 3: # Total de ingresos y ventas promedio mensuales, total anual y meses con mas ventas al año
             _ = sales_income()
 
             salir = exit_program()
 
-        elif caso == 0:
+        elif caso == 0: # Salida
             salir = True
             print('\nMuchas gracias por su visita!')
             
-        else:
+        else: #En caso de opcion erronea
             print('Opcion invalida')
